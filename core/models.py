@@ -1,449 +1,392 @@
 from django.db import models
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Text,
-    Boolean,
-    Date,
-    DateTime,
-    ForeignKey,
-    UniqueConstraint,
-)
-from sqlalchemy.orm import relationship, declarative_base
+class LibraryType(models.Model):
+    name = models.CharField(max_length=100)
 
-Base = declarative_base()
+class SampleType(models.Model):
+    name = models.CharField(max_length=100)
 
-class InstrumentType(Base):
-    """
-    Represents the type of an instrument used in the experiment.
-    """
-    __tablename__ = 'instrument_types'
+class SpecimenSource(models.Model):
+    name = models.CharField(max_length=100)
 
-    id = Column(Integer, primary_key=True)
-    label = Column(String(100, collation="utf8_bin"))
+class Barcode(models.Model):
+    # Equivalent to SQLAlchemy Integer PK
+    # Django automatically adds an id primary key field if not specified, but I added explicitly for clarity
+    id = models.AutoField(primary_key=True)
 
-    instruments_relation = relationship(
-        "Instrument",
-        back_populates="instrument_type"
+    def __str__(self):
+        return f"Barcode(id={self.id})"
+
+
+class Flowcell(models.Model):
+    id = models.AutoField(primary_key=True)
+    label = models.CharField(max_length=100)
+    employee_id = models.IntegerField(null=True, blank=True)
+    date_created = models.DateField(null=True, blank=True)
+    clustering_station_id = models.IntegerField(null=True, blank=True)
+    old_comments = models.CharField(max_length=2048, null=True, blank=True)
+    is_paired_end = models.BooleanField(null=True, blank=True)
+    failed = models.BooleanField(null=True, blank=True)
+    barcode = models.ForeignKey(Barcode, on_delete=models.SET_NULL, null=True, blank=True, related_name='flowcells')
+    active = models.BooleanField(null=True, blank=True)
+
+    # Related fields are auto-created in Django, but you can specify reverse relation names if needed.
+    # Here 'runs', 'lanes', and 'analyses' would be reverse relations from related models.
+
+    def __str__(self):
+        return f"Flowcell(id={self.id}, label={self.label})"
+
+
+class Analyses(models.Model):
+    id = models.AutoField(primary_key=True)
+    analysis_type = models.ForeignKey('AnalysisType', on_delete=models.SET_NULL, null=True, blank=True, related_name='analyses')
+    flowcell = models.ForeignKey(Flowcell, on_delete=models.CASCADE, related_name='analyses')
+    date_performed = models.DateField(null=True, blank=True)
+    notes = models.CharField(max_length=2048, null=True, blank=True)
+    software_version = models.CharField(max_length=128, null=True, blank=True)
+    contaminant_filtered = models.BooleanField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Analyses(id={self.id}, flowcell_id={self.flowcell_id})"
+
+
+class Run(models.Model):
+    id = models.AutoField(primary_key=True)
+    label = models.CharField(max_length=100)
+    date_started = models.DateField(null=True, blank=True)
+    date_completed = models.DateField(null=True, blank=True)
+    cycles = models.IntegerField(null=True, blank=True)
+    instrument = models.ForeignKey('Instrument', on_delete=models.SET_NULL, null=True, blank=True, related_name='runs')
+    flowcell = models.ForeignKey(Flowcell, on_delete=models.CASCADE, related_name='runs')
+    employee_id = models.IntegerField(null=True, blank=True)
+    notes = models.CharField(max_length=2048, null=True, blank=True)
+    cycle1_attachment_id = models.IntegerField(null=True, blank=True)
+    read2_cycle1_attachment_id = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Run(id={self.id}, label={self.label})"
+    
+class Lane(models.Model):
+    number = models.IntegerField()
+    is_control = models.BooleanField(null=True, blank=True)
+    is_titer = models.BooleanField(null=True, blank=True)
+    flowcell = models.ForeignKey('Flowcell', on_delete=models.CASCADE, related_name='lanes')
+    pool = models.ForeignKey('Pool', on_delete=models.CASCADE, related_name='lanes')
+    failed = models.BooleanField(null=True, blank=True)
+    sequence_type = models.ForeignKey('SequenceType', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Lane {self.number} (Flowcell: {self.flowcell_id})"
+
+
+class Library(models.Model):
+    label = models.CharField(max_length=100)
+    library_type = models.ForeignKey('LibraryType', on_delete=models.CASCADE)
+    sample = models.ForeignKey('Sample', on_delete=models.CASCADE, related_name='libraries')
+    employee_id = models.IntegerField(null=True, blank=True)
+    protocol = models.ForeignKey('Protocol', on_delete=models.CASCADE)
+    date_created = models.DateField(null=True, blank=True)
+    description = models.TextField(max_length=4096, null=True, blank=True)
+    insert_size = models.IntegerField(null=True, blank=True)
+    client_provided = models.BooleanField(null=True, blank=True)
+    bardex = models.ForeignKey('Bardex', on_delete=models.CASCADE, related_name='library_index_1')
+    second_bardex = models.ForeignKey('Bardex', on_delete=models.CASCADE, related_name='library_index_2', null=True, blank=True)
+    active = models.BooleanField(null=True, blank=True)
+
+    def __str__(self):
+        return self.label
+
+
+class LibraryLane(models.Model):
+    lane = models.ForeignKey(Lane, on_delete=models.CASCADE, related_name='library_lanes')
+    library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='library_lanes')
+    units = models.CharField(max_length=10)
+    concentration = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"LibraryLane {self.id} - Lane {self.lane_id} / Library {self.library_id}"
+
+
+class Organism(models.Model):
+    label = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.label    
+    
+class Gemstone(models.Model):
+    label = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.label
+
+
+class Project(models.Model):
+    label = models.CharField(max_length=100)
+    gemstone = models.ForeignKey(Gemstone, on_delete=models.CASCADE, related_name='projects')
+    ftp_url = models.CharField(max_length=50, null=True, blank=True)
+    ftp_user = models.CharField(max_length=10, null=True, blank=True)
+    website_url = models.CharField(max_length=50, null=True, blank=True)
+    website_user = models.CharField(max_length=12, null=True, blank=True)
+    website_password = models.CharField(max_length=10, null=True, blank=True)
+    old_comments = models.TextField(max_length=4096, null=True, blank=True)
+    is_current = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.label
+
+
+class Sample(models.Model):
+    label = models.CharField(max_length=100)
+    organism = models.ForeignKey('Organism', on_delete=models.CASCADE, related_name='samples')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='samples')
+    description = models.TextField(max_length=4096, null=True, blank=True)
+    sample_type = models.ForeignKey('SampleType', on_delete=models.CASCADE)
+    specimen_source = models.ForeignKey('SpecimenSource', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.label
+
+class Protocol(models.Model):
+    label = models.CharField(max_length=100)
+    description = models.TextField(max_length=2048, null=True, blank=True)
+    is_current = models.IntegerField(default=1)
+    adapter_length = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return self.label
+
+class Bardex(models.Model):
+    label = models.CharField(max_length=100)
+    seqtext = models.CharField(max_length=100)
+    note = models.CharField(max_length=255, null=True, blank=True)
+    rc_seqtext = models.CharField(max_length=100)
+    abbrev_label = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.label
+
+
+class ProtocolHasBardex(models.Model):
+    protocol = models.ForeignKey(Protocol, on_delete=models.CASCADE, related_name='protocol_has_bardexes')
+    bardex = models.ForeignKey(Bardex, on_delete=models.CASCADE, related_name='protocol_has_bardexes')
+
+    class Meta:
+        unique_together = (('protocol', 'bardex'),)
+
+    def __str__(self):
+        return f"Protocol {self.protocol_id} - Bardex {self.bardex_id}"    
+    
+
+
+
+
+
+
+class InstrumentType(models.Model):
+    label = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.label
+
+
+class Instrument(models.Model):
+    label = models.CharField(max_length=100)
+    instrument_type = models.ForeignKey(
+        InstrumentType,
+        on_delete=models.CASCADE,
+        related_name='instruments'
     )
 
+    def __str__(self):
+        return self.label
+    
 
-class Instrument(Base):
-    """
-    Represents an instrument used in the experiment.
-    """
-    __tablename__ = 'instruments'
+class Pool(models.Model):
+    label = models.CharField(max_length=100)
+    description = models.CharField(max_length=4096, null=True, blank=True)
+    date_created = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True)
 
-    id = Column(Integer, primary_key=True)
-    label = Column(String(100, collation="utf8_bin"))
-    instrument_type_id = Column(Integer, ForeignKey('instrument_types.id'))
+    def __str__(self):
+        return self.label
 
-    instrument_type = relationship(
-        "InstrumentType",
-        back_populates="instruments_relation",
-        viewonly=True,
-        lazy='joined'
+
+class SequenceType(models.Model):
+    label = models.CharField(max_length=45)
+    abbrev = models.CharField(max_length=20)
+    active = models.BooleanField(default=True)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.label
+
+
+class ReferenceGenome(models.Model):
+    label = models.CharField(max_length=255)
+    notes = models.TextField(null=True, blank=True)
+    organism = models.ForeignKey(
+        'Organism',
+        on_delete=models.PROTECT,
+        related_name='reference_genomes',
+        null=True, blank=True
     )
 
-
-class Pool(Base):
-    """
-    Represents a pool of samples or data.
-    """
-    __tablename__ = 'pools'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(100, collation="utf8_bin"))
-    description = Column(String(4096, collation="utf8_bin"))
-    date_created = Column(Date)
-    active = Column(Boolean)
+    def __str__(self):
+        return self.label
 
 
-class SequenceType(Base):
-    """
-    Represents a type of sequencing data.
-    """
-    __tablename__ = 'sequence_types'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(45))
-    abbrev = Column(String(20))
-    active = Column(Boolean)
-    description = Column(Text)
-
-    downstream_analyses = relationship(
-        'DownstreamAnalysis',
-        back_populates='sequence_type',
-        viewonly=True,
-        lazy='joined'
-    )
-    analysis_outputs = relationship(
-        'AnalysisOutput',
-        back_populates='sequence_type',
-        viewonly=True,
-        lazy='joined'
+class CoordinateSet(models.Model):
+    label = models.CharField(max_length=255)
+    source_file = models.CharField(max_length=255, null=True, blank=True)
+    reference_genome = models.ForeignKey(
+        ReferenceGenome,
+        on_delete=models.PROTECT,
+        related_name='coordinate_sets',
+        null=True, blank=True
     )
 
+    def __str__(self):
+        return self.label
+    
+class AnalysisType(models.Model):
+    label = models.CharField(max_length=50, unique=True)
+    description = models.CharField(max_length=4096, null=True, blank=True)
 
-class ReferenceGenome(Base):
-    """
-    Represents a reference genome used in the analysis.
-    """
-    __tablename__ = 'reference_genomes'
+    def __str__(self):
+        return self.label
 
-    id = Column(Integer, primary_key=True)
-    label = Column(String(255, collation="utf8_bin"))
-    notes = Column(Text(collation="utf8_bin"))
-    organism_id = Column(Integer, ForeignKey('organisms.id'))
 
-    organism = relationship('Organism', viewonly=True, lazy='joined')
-    downstream_analyses = relationship(
-        'DownstreamAnalysis',
-        back_populates='reference_genome',
-        viewonly=True,
-        lazy='joined'
+class AnalysisOutputType(models.Model):
+    label = models.CharField(max_length=45, unique=True)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.label
+
+
+class AnalysisFileType(models.Model):
+    label = models.CharField(max_length=45)
+    abbrev = models.CharField(max_length=10)
+    variant = models.IntegerField(default=0)
+    description = models.CharField(max_length=4096, null=True, blank=True)
+
+    def __str__(self):
+        return self.label
+
+
+class DownstreamAnalysisFile(models.Model):
+    file_path = models.CharField(max_length=750)
+    downstream_analysis_file_type = models.ForeignKey(
+        AnalysisFileType,
+        on_delete=models.PROTECT,
+        related_name='downstream_analysis_files'
+    )
+    downstream_analysis = models.ForeignKey(
+        'DownstreamAnalysis',  # Assuming 'DownstreamAnalysis' model exists
+        on_delete=models.CASCADE,
+        related_name='downstream_analysis_files'
+    )
+    include_freq = models.IntegerField(default=0)
+    description = models.CharField(max_length=2048, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('file_path', 'downstream_analysis')
+
+    def __str__(self):
+        return f"{self.file_path} ({self.downstream_analysis})"
+
+class DownstreamAnalysisType(models.Model):
+    label = models.CharField(max_length=45)
+    abbrev = models.CharField(max_length=10)
+    description = models.CharField(max_length=4096)
+    active = models.BooleanField()
+
+    def __str__(self):
+        return self.label
+
+
+class DownstreamAnalysis(models.Model):
+    label = models.CharField(max_length=50)
+    analysis_date = models.DateTimeField(null=True, blank=True)
+
+    downstream_analysis_type = models.ForeignKey(
+        DownstreamAnalysisType,
+        on_delete=models.PROTECT,
+        related_name='downstream_analyses'
+    )
+    sample = models.ForeignKey(
+        'Sample',  # Make sure Sample model exists
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='downstream_analyses'
+    )
+    base_dir = models.CharField(max_length=1024, null=True, blank=True)
+    description = models.CharField(max_length=4096, null=True, blank=True)
+
+    sequence_type = models.ForeignKey(
+        'SequenceType',  # Make sure SequenceType model exists
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='downstream_analyses'
+    )
+    coordinate_set = models.ForeignKey(
+        'CoordinateSet',  # Make sure CoordinateSet model exists
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='downstream_analyses'
+    )
+    reference_genome = models.ForeignKey(
+        'ReferenceGenome',  # Make sure ReferenceGenome model exists
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='downstream_analyses'
     )
 
+    def __str__(self):
+        return self.label
 
-class CoordinateSet(Base):
-    """
-    Represents a coordinate set used in the analysis.
-    """
-    __tablename__ = 'coordinate_sets'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String)
-    source_file = Column(String)
-    reference_genome_id = Column(Integer, ForeignKey('reference_genomes.id'))
-
-    reference_genome = relationship('ReferenceGenome')
-    downstream_analyses = relationship(
-        'DownstreamAnalysis',
-        back_populates='coordinate_set',
-        viewonly=True,
-        lazy='joined'
+class AnalysisOutputTypeDownstreamFileType(models.Model):
+    analysis_output_type = models.ForeignKey(
+        AnalysisOutputType,
+        on_delete=models.CASCADE,
+        related_name='downstream_file_types'
+    )
+    analysis_file_type = models.ForeignKey(
+        AnalysisFileType,
+        on_delete=models.CASCADE,
+        related_name='analysis_output_types'
     )
 
-
-class AnalysisType(Base):
-    """
-    Represents types of analysis that can be performed.
-    """
-    __tablename__ = 'analysis_types'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    label = Column(String(50), nullable=False, unique=True)
-    description = Column(String(4096), nullable=True)
+    class Meta:
+        unique_together = ('analysis_output_type', 'analysis_file_type')
 
 
-class AnalysisOutputType(Base):
-    """
-    Represents types of analysis outputs.
-    """
-    __tablename__ = 'analysis_output_types'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(45), nullable=False, unique=True)
-    description = Column(Text)
-
-    downstream_file_types = relationship(
-        'AnalysisOutputTypeDownstreamFileType',
-        back_populates='analysis_output_type'
+class AnalysisOutput(models.Model):
+    sample = models.ForeignKey(
+        'Sample',  # Ensure Sample model exists
+        on_delete=models.CASCADE,
+        related_name='analysis_outputs'
     )
-
-
-class AnalysisFileType(Base):
-    """
-    Represents file types associated with downstream analysis.
-    """
-    __tablename__ = 'downstream_analysis_file_types'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(45), nullable=False)
-    abbrev = Column(String(10), nullable=False)
-    variant = Column(Integer, nullable=False, default=0)
-    description = Column(String(4096))
-
-    analysis_output_types = relationship(
-        'AnalysisOutputTypeDownstreamFileType',
-        back_populates='analysis_file_type'
+    sequence_type = models.ForeignKey(
+        'SequenceType',  # Ensure SequenceType model exists
+        on_delete=models.CASCADE,
+        related_name='analysis_outputs'
     )
-
-
-class DownstreamAnalysisFile(Base):
-    """
-    Represents files associated with downstream analyses.
-    """
-    __tablename__ = 'downstream_analysis_files'
-
-    id = Column(Integer, primary_key=True)
-    file_path = Column(String(750), nullable=False)
-    downstream_analysis_file_type_id = Column(
-        Integer,
-        ForeignKey('downstream_analysis_file_types.id')
+    analysis_output_type = models.ForeignKey(
+        AnalysisOutputType,
+        on_delete=models.CASCADE
     )
-    downstream_analysis_id = Column(
-        Integer,
-        ForeignKey('downstream_analyses.id')
+    analysis = models.ForeignKey(
+        'DownstreamAnalysis',  # Ensure DownstreamAnalysis model exists
+        on_delete=models.CASCADE,
+        related_name='outputs'
     )
-    include_freq = Column(Integer, nullable=False, default=0)
-    description = Column(String(2048))
+    is_primary = models.BooleanField(default=False)
 
-    analysis_file_type = relationship('AnalysisFileType')
-
-    downstream_analysis = relationship(
-        'DownstreamAnalysis',
-        back_populates='downstream_analysis_files'
-    )
-
-    __table_args__ = (
-        UniqueConstraint(
-            'file_path',
-            'downstream_analysis_id'
-        ),
-    )
-
-
-class DownstreamAnalysisType(Base):
-    """
-    Represents types of downstream analyses.
-    """
-    __tablename__ = 'downstream_analysis_types'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(45))
-    abbrev = Column(String(10))
-    description = Column(String(4096))
-    active = Column(Boolean)
-
-    downstream_analyses = relationship(
-        'DownstreamAnalysis',
-        back_populates='downstream_analysis_type'
-    )
-
-
-class DownstreamAnalysis(Base):
-    """
-    Represents downstream analyses.
-    """
-    __tablename__ = 'downstream_analyses'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(50), nullable=False)
-    analysis_date = Column(DateTime)
-    downstream_analysis_type_id = Column(
-        Integer,
-        ForeignKey('downstream_analysis_types.id'),
-        nullable=False
-    )
-    sample_id = Column(Integer, ForeignKey('samples.id'))
-    base_dir = Column(String(1024))
-    description = Column(String(4096))
-    sequence_type_id = Column(Integer, ForeignKey('sequence_types.id'))
-    coordinate_set_id = Column(Integer, ForeignKey('coordinate_sets.id'))
-    reference_genome_id = Column(Integer, ForeignKey('reference_genomes.id'))
-
-    downstream_analysis_files = relationship(
-        'DownstreamAnalysisFile',
-        back_populates='downstream_analysis'
-    )
-    outputs = relationship(
-        'AnalysisOutput',
-        back_populates='analysis',
-        cascade='all, delete-orphan',
-        foreign_keys='AnalysisOutput.downstream_analysis_id',
-        primaryjoin='DownstreamAnalysis.id == AnalysisOutput.downstream_analysis_id'
-    )
-
-    downstream_analysis_type = relationship(
-        'DownstreamAnalysisType',
-        back_populates='downstream_analyses'
-    )
-    sample = relationship('Sample', back_populates='downstream_analyses')
-    sequence_type = relationship('SequenceType', back_populates='downstream_analyses')
-    coordinate_set = relationship('CoordinateSet', back_populates='downstream_analyses')
-    reference_genome = relationship('ReferenceGenome', back_populates='downstream_analyses')
-
-
-class AnalysisOutputTypeDownstreamFileType(Base):
-    """
-    Represents the relationship between analysis output types and downstream analysis file types.
-    """
-    __tablename__ = 'analysis_output_type_downstream_analysis_file_types'
-
-    id = Column(Integer, primary_key=True)
-    analysis_output_type_id = Column(Integer, ForeignKey('analysis_output_types.id'))
-    downstream_analysis_file_type_id = Column(
-        Integer,
-        ForeignKey('downstream_analysis_file_types.id')
-    )
-
-    analysis_output_type = relationship(
-        'AnalysisOutputType',
-        back_populates='downstream_file_types'
-    )
-    analysis_file_type = relationship(
-        'AnalysisFileType',
-        back_populates='analysis_output_types'
-    )
-
-    __table_args__ = (
-        UniqueConstraint(
-            'analysis_output_type_id',
-            'downstream_analysis_file_type_id'
-        ),
-    )
-
-
-class AnalysisOutput(Base):
-    """
-    Represents analysis outputs.
-    """
-    __tablename__ = 'analysis_outputs'
-
-    id = Column(Integer, primary_key=True)
-    sample_id = Column(Integer, ForeignKey('samples.id'))
-    sequence_type_id = Column(Integer, ForeignKey('sequence_types.id'))
-    analysis_output_type_id = Column(Integer, ForeignKey('analysis_output_types.id'))
-    downstream_analysis_id = Column(Integer, ForeignKey('downstream_analyses.id'))
-    is_primary = Column(Boolean, default=False)
-
-    sample = relationship('Sample', viewonly=True, lazy='joined')
-    sequence_type = relationship('SequenceType', back_populates='analysis_outputs')
-    analysis_output_type = relationship('AnalysisOutputType')
-    analysis = relationship('DownstreamAnalysis', back_populates='outputs')
-
-
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Text,
-    Boolean,
-    Date,
-    DateTime,
-    ForeignKey,
-    UniqueConstraint,
-)
-from sqlalchemy.orm import relationship, declarative_base
-
-Base = declarative_base()
-
-
-class Organism(Base):
-    """
-    Represents an organism (species).
-    """
-    __tablename__ = 'organisms'
-
-    id = Column(Integer, primary_key=True)
-    genus = Column(String(100, collation="utf8_bin"), nullable=False)
-    species = Column(String(100, collation="utf8_bin"), nullable=False)
-    common_name = Column(String(100, collation="utf8_bin"))
-
-    reference_genomes = relationship('ReferenceGenome', back_populates='organism')
-
-
-class Sample(Base):
-    """
-    Represents a biological sample.
-    """
-    __tablename__ = 'samples'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(255, collation="utf8_bin"), nullable=False, unique=True)
-    description = Column(String(4096, collation="utf8_bin"))
-    date_collected = Column(Date)
-    organism_id = Column(Integer, ForeignKey('organisms.id'))
-    pool_id = Column(Integer, ForeignKey('pools.id'))
-    active = Column(Boolean, default=True)
-
-    organism = relationship('Organism', back_populates='samples')
-    pool = relationship('Pool')
-    downstream_analyses = relationship('DownstreamAnalysis', back_populates='sample')
-
-
-# Update Organism.samples relationship now that Sample is defined
-Organism.samples = relationship('Sample', back_populates='organism')
-
-
-class User(Base):
-    """
-    Represents a user in the system.
-    """
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True)
-    username = Column(String(150, collation="utf8_bin"), unique=True, nullable=False)
-    email = Column(String(255, collation="utf8_bin"), unique=True, nullable=False)
-    full_name = Column(String(255, collation="utf8_bin"))
-    hashed_password = Column(String(255), nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
-
-
-class Project(Base):
-    """
-    Represents a project grouping samples or analyses.
-    """
-    __tablename__ = 'projects'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255, collation="utf8_bin"), unique=True, nullable=False)
-    description = Column(Text(collation="utf8_bin"))
-    date_created = Column(DateTime)
-    active = Column(Boolean, default=True)
-
-    samples = relationship('Sample', secondary='project_samples', back_populates='projects')
-
-
-class ProjectSample(Base):
-    """
-    Association table for many-to-many relationship between Project and Sample.
-    """
-    __tablename__ = 'project_samples'
-
-    project_id = Column(Integer, ForeignKey('projects.id'), primary_key=True)
-    sample_id = Column(Integer, ForeignKey('samples.id'), primary_key=True)
-
-
-# Add projects relationship to Sample
-Sample.projects = relationship('Project', secondary='project_samples', back_populates='samples')
-
-
-class Experiment(Base):
-    """
-    Represents an experiment in which samples are analyzed.
-    """
-    __tablename__ = 'experiments'
-
-    id = Column(Integer, primary_key=True)
-    label = Column(String(255, collation="utf8_bin"), unique=True, nullable=False)
-    description = Column(Text(collation="utf8_bin"))
-    date_performed = Column(Date)
-    instrument_id = Column(Integer, ForeignKey('instruments.id'))
-    pool_id = Column(Integer, ForeignKey('pools.id'))
-
-    instrument = relationship('Instrument')
-    pool = relationship('Pool')
-    samples = relationship('Sample', secondary='experiment_samples', back_populates='experiments')
-
-
-class ExperimentSample(Base):
-    """
-    Association table for many-to-many relationship between Experiment and Sample.
-    """
-    __tablename__ = 'experiment_samples'
-
-    experiment_id = Column(Integer, ForeignKey('experiments.id'), primary_key=True)
-    sample_id = Column(Integer, ForeignKey('samples.id'), primary_key=True)
-
-
-# Add experiments relationship to Sample
-Sample.experiments = relationship('Experiment', secondary='experiment_samples', back_populates='samples')
-
-
-
+    def __str__(self):
+        return f"Output {self.id} (Primary: {self.is_primary})"
