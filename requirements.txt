@@ -1,0 +1,19 @@
+Django>=4.2
+djangorestframework>=3.14
+django-filter
+drf-yasg
+django-environ
+django-cors-headers
+psycopg2-binary  # Use mysqlclient if you're using MySQL
+Pillow
+django-extensions
+graphviz
+pydot
+celery
+django-celery-beat
+django-simple-history
+ipython
+pytest
+pytest-django
+black
+isort
