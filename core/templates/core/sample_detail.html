@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Sample Details</h2>
+  <ul class="list-group">
+    <li class="list-group-item"><strong>Label:</strong> {{ object.label }}</li>
+    <li class="list-group-item"><strong>Project:</strong> {{ object.project }}</li>
+    <li class="list-group-item"><strong>Organism:</strong> {{ object.organism }}</li>
+    <!-- Add more fields as needed -->
+  </ul>
+  <div class="mt-3">
+    <a href="{% url 'core:sample_update' object.pk %}" class="btn btn-warning">Edit</a>
+    <a href="{% url 'core:sample_delete' object.pk %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'core:sample_list' %}" class="btn btn-secondary">Back to list</a>
+  </div>
+</div>
+{% endblock %}

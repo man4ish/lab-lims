@@ -17,8 +17,19 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Auth URLs
+    path("accounts/login/", auth_views.LoginView.as_view(template_name='registration/login.html'), name="login"),
+    path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
+
+    # Core app URLs
     path('core/', include('core.urls', namespace='core')),
+
+    # Redirect root URL to core home
+    path('', RedirectView.as_view(url='/core/', permanent=False)),
 ]
