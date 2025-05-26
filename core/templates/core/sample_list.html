@@ -19,8 +19,8 @@
         {% for sample in object_list %}
           <tr>
             <td>{{ sample.label }}</td>
-            <td>{{ sample.project }}</td>
-            <td>{{ sample.organism }}</td>
+            <td>{{ sample.project|default:"N/A" }}</td>
+            <td>{{ sample.organism|default:"N/A" }}</td>
             <td>{{ sample.created_at|date:"Y-m-d H:i" }}</td>
             <td>
               <a href="{% url 'core:sample_detail' sample.pk %}" class="btn btn-sm btn-info">View</a>

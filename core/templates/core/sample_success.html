@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sample Created</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Sample Submitted Successfully{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
     <h1>Sample Submitted Successfully!</h1>
     <p>Your sample has been recorded in the system.</p>
-    <a href="{% url 'core:sample_create' %}">Create another sample</a>
-</body>
-</html>
+    <a href="{% url 'core:sample_create' %}" class="btn btn-primary">Create another sample</a>
+    <a href="{% url 'core:sample_list' %}" class="btn btn-secondary ms-2">Back to Sample List</a>
+</div>
+{% endblock %}

@@ -7,7 +7,10 @@
     <li class="list-group-item"><strong>Label:</strong> {{ object.label }}</li>
     <li class="list-group-item"><strong>Project:</strong> {{ object.project }}</li>
     <li class="list-group-item"><strong>Organism:</strong> {{ object.organism }}</li>
-    <!-- Add more fields as needed -->
+    <li class="list-group-item"><strong>Sample Type:</strong> {{ object.sample_type }}</li>
+    <li class="list-group-item"><strong>Specimen Source:</strong> {{ object.specimen_source }}</li>
+    <li class="list-group-item"><strong>Description:</strong> {{ object.description|linebreaksbr }}</li>
+    <li class="list-group-item"><strong>Created At:</strong> {{ object.created_at|date:"Y-m-d H:i" }}</li>
   </ul>
   <div class="mt-3">
     <a href="{% url 'core:sample_update' object.pk %}" class="btn btn-warning">Edit</a>

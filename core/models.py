@@ -177,12 +177,6 @@ class ProtocolHasBardex(models.Model):
     def __str__(self):
         return f"Protocol {self.protocol_id} - Bardex {self.bardex_id}"    
     
-
-
-
-
-
-
 class InstrumentType(models.Model):
     label = models.CharField(max_length=100)
 
