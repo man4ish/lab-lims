@@ -23,8 +23,17 @@ urlpatterns = [
     path('librarylane/<int:pk>/', LibraryLaneDetailView.as_view(), name='librarylane_detail'),
     path('lane/<int:pk>/', views.LaneDetailView.as_view(), name='lane_detail'),
 
-    path('analyses/flowcell/<int:flowcell_id>/', views.analyses_by_flowcell, name='analyses_by_flowcell'),
+    path('analyses/flowcell/<int:flowcell_id>/', views.analyses_and_runs_by_flowcell, name='analyses_and_runs_by_flowcell'),
 
+    path('runs/<int:pk>/', views.RunDetailView.as_view(), name='run_detail'), # Assuming RunDetailView is a class-based view
+
+    # NEW: URL for Downstream Analyses by Sequence Type
+    path('downstream_analyses/sequence_type/<int:sequence_type_id>/', views.downstream_analyses_by_sequence_type, name='downstream_analyses_by_sequence_type'),
+    
+    path('projects/<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
+
+    path('instruments/<int:pk>/modal/', views.instrument_detail_modal, name='instrument_detail_modal'),
+    path('instruments/<int:pk>/', views.InstrumentDetailView.as_view(), name='instrument_detail'),
 
     path("accounts/signup/", core_views.signup_view, name="signup"),
     path('logout/', views.logout_confirm, name='logout_confirm'),

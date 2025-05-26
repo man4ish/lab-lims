@@ -7,16 +7,29 @@
     <li class="list-group-item"><strong>Number:</strong> {{ object.number }}</li>
     <li class="list-group-item">
       <strong>Flowcell:</strong>
-      <a href="{% url 'core:analyses_by_flowcell' object.flowcell.id %}">{{ object.flowcell.id }}</a>
+      {# Assumes 'analyses_by_flowcell' or 'analyses_and_runs_by_flowcell' is the correct URL name #}
+      <a href="{% url 'core:analyses_and_runs_by_flowcell' object.flowcell.id %}">{{ object.flowcell.id }}</a>
     </li>
     <li class="list-group-item"><strong>Is Control:</strong> {{ object.is_control }}</li>
     <li class="list-group-item"><strong>Is Titer:</strong> {{ object.is_titer }}</li>
     <li class="list-group-item"><strong>Pool:</strong> {{ object.pool }}</li>
     <li class="list-group-item"><strong>Failed:</strong> {{ object.failed }}</li>
-    <li class="list-group-item"><strong>Sequence Type:</strong> {{ object.sequence_type }}</li>
+    <li class="list-group-item">
+      <strong>Sequence Type:</strong>
+      {# Check if a sequence_type exists before trying to link to it #}
+      {% if object.sequence_type %}
+        <a href="{% url 'core:downstream_analyses_by_sequence_type' object.sequence_type.id %}">
+          {# Display the label of the SequenceType, or its ID if no label #}
+          {{ object.sequence_type.label|default:object.sequence_type.id }}
+        </a>
+      {% else %}
+        N/A {# Display N/A if no sequence type is associated #}
+      {% endif %}
+    </li>
   </ul>
-  <!-- <a href="{% url 'core:library_detail' library.pk %}">Back to Library</a> -->
+  <p class="mt-4">
+    {# This is the "Back to Previous Page" link #}
+    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+  </p>
 </div>
 {% endblock %}
-
-

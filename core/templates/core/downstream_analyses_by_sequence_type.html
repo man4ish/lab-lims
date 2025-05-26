@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Downstream Analyses for Sequence Type: {{ sequence_type.label|default:sequence_type.id }}</h2>
+    {# Assuming SequenceType has a 'label' field, otherwise just show ID #}
+
+    {% if downstream_analyses %}
+        <ul class="list-group">
+            {% for da in downstream_analyses %}
+                <li class="list-group-item">
+                    <strong>Analysis Label:</strong> {{ da.label }} <br>
+                    <strong>Analysis Type:</strong> {{ da.downstream_analysis_type.label|default:"N/A" }} <br>
+                    <strong>Analysis Date:</strong> {{ da.analysis_date|date:"F d, Y P"|default:"N/A" }} <br>
+                    <strong>Description:</strong> {{ da.description|default:"None" }} <br>
+                    <strong>Base Directory:</strong> {{ da.base_dir|default:"N/A" }} <br>
+                    <strong>Sample:</strong> {{ da.sample.label|default:"N/A" }} <br>
+                    <strong>Coordinate Set:</strong> {{ da.coordinate_set.label|default:"N/A" }} <br>
+                    <strong>Reference Genome:</strong> {{ da.reference_genome.label|default:"N/A" }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No downstream analyses found for this sequence type.</p>
+    {% endif %}
+
+    <p class="mt-4">
+        {# This is the "Back to Previous Page" link #}
+        <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+        {# You can also add a specific "Back to Lanes" link as a fallback or alternative if desired #}
+        {# <a href="{% url 'core:lane_list' %}" class="btn btn-info">Back to All Lanes</a> #}
+    </p>
+</div>
+{% endblock %}

@@ -26,6 +26,48 @@ from .models import Lane
 from django.shortcuts import render, get_object_or_404
 from .models import Analyses, Flowcell
 
+from .models import Flowcell, Analyses, Run, SequenceType, DownstreamAnalysis # Make sure to import all necessary models
+from django.views.generic import DetailView # For class-based detail view
+from .models import Project
+from .models import Instrument, InstrumentType
+
+from .models import Instrument # Make sure Instrument model is imported
+
+from .models import Run # Make sure Run model is imported
+
+class InstrumentDetailView(DetailView):
+    model = Instrument
+    template_name = 'core/instrument_detail.html' # This is the template it will use
+    context_object_name = 'instrument' # This makes the Instrument object available as 'instrument' in the template
+
+class RunDetailView(DetailView):
+    model = Run
+    template_name = 'core/run_detail.html' # You'll need to create this template
+    context_object_name = 'object' # Or 'run' if you prefer that context name
+
+def instrument_detail_modal(request, pk):
+    instrument = Instrument.objects.get(pk=pk)
+    return render(request, 'core/instrument_detail_modal.html', {'instrument': instrument})
+
+class ProjectDetailView(DetailView):
+    model = Project
+    template_name = 'core/project_detail.html' # Create this template file next!
+    context_object_name = 'project' # Name of the object in the template context
+
+
+def downstream_analyses_by_sequence_type(request, sequence_type_id):
+    # Get the specific SequenceType object
+    sequence_type = get_object_or_404(SequenceType, id=sequence_type_id)
+
+    # Get all DownstreamAnalysis objects related to this SequenceType
+    # We use the related_name='downstream_analyses' defined in the DownstreamAnalysis model
+    downstream_analyses = sequence_type.downstream_analyses.all()
+
+    return render(request, 'core/downstream_analyses_by_sequence_type.html', {
+        'sequence_type': sequence_type,
+        'downstream_analyses': downstream_analyses,
+    })
+
 def analyses_by_flowcell(request, flowcell_id):
     flowcell = get_object_or_404(Flowcell, id=flowcell_id)
     analyses = flowcell.analyses.all()  # using related_name
@@ -33,6 +75,22 @@ def analyses_by_flowcell(request, flowcell_id):
         'flowcell': flowcell,
         'analyses': analyses
     })
+
+def analyses_and_runs_by_flowcell(request, flowcell_id):
+    flowcell = get_object_or_404(Flowcell, id=flowcell_id)
+
+    # Get all analyses associated with this flowcell
+    analyses = flowcell.analyses.all()  # Uses related_name='analyses' in Analyses model
+
+    # Get all runs associated with this flowcell
+    runs = flowcell.runs.all() # Uses related_name='runs' in Run model
+
+    return render(request, 'core/analyses_and_runs_by_flowcell.html', {
+        'flowcell': flowcell,
+        'analyses': analyses,
+        'runs': runs, # Pass the runs data to the template
+    })
+
 
 class LaneDetailView(DetailView):
     model = Lane

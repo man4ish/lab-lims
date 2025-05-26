@@ -5,10 +5,19 @@
   <h2>Sample Details</h2>
   <ul class="list-group">
     <li class="list-group-item"><strong>Label:</strong> {{ object.label }}</li>
-    <li class="list-group-item"><strong>Project:</strong> {{ object.project }}</li>
+    <li class="list-group-item">
+      {# Check if a project exists before linking, though it should always exist given your model's ForeignKey #}
+      <strong>Project:</strong>
+      {% if object.project %}
+        <a href="{% url 'core:project_detail' object.project.pk %}">
+          {{ object.project.label }}
+        </a>
+      {% else %}
+        N/A {# Should not happen if Project is not null=True #}
+      {% endif %}
+    </li>
     <li class="list-group-item"><strong>Organism:</strong> {{ object.organism }}</li>
-    <!-- Add other sample fields as needed -->
-  </ul>
+    </ul>
 
   <h3 class="mt-4">Libraries linked to this Sample</h3>
   <ul class="list-group mb-4">
