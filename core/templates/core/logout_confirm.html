@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Logout Confirmation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3>Are you sure you want to logout?</h3>
+    <form method="post" action="{% url 'core:logout_confirm' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Logout</button>
+        <a href="{% url 'core:home' %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

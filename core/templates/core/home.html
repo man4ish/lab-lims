@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Welcome to Lab Data Manager</h1>
+    <p><a href="{% url 'core:sample_list' %}">View Samples</a> | <a href="{% url 'core:sample_create' %}">Submit Sample</a></p>
+</div>
+{% endblock %}
