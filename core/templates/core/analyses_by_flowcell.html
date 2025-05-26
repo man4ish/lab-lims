@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Analyses for Flowcell: {{ flowcell.label }}</h2>
+
+  {% if analyses %}
+    <ul class="list-group">
+      {% for analysis in analyses %}
+        <li class="list-group-item">
+          <strong>Analysis ID:</strong> {{ analysis.id }} |
+          <strong>Date:</strong> {{ analysis.date_performed }} |
+          <strong>Software Version:</strong> {{ analysis.software_version }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No analyses found for this flowcell.</p>
+  {% endif %}
+</div>
+{% endblock %}

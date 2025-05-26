@@ -23,6 +23,9 @@ urlpatterns = [
     path('librarylane/<int:pk>/', LibraryLaneDetailView.as_view(), name='librarylane_detail'),
     path('lane/<int:pk>/', views.LaneDetailView.as_view(), name='lane_detail'),
 
+    path('analyses/flowcell/<int:flowcell_id>/', views.analyses_by_flowcell, name='analyses_by_flowcell'),
+
+
     path("accounts/signup/", core_views.signup_view, name="signup"),
     path('logout/', views.logout_confirm, name='logout_confirm'),
 ]

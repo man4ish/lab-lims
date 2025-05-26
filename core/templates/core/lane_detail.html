@@ -5,18 +5,18 @@
   <h2>Lane Details</h2>
   <ul class="list-group mb-4">
     <li class="list-group-item"><strong>Number:</strong> {{ object.number }}</li>
-    <li class="list-group-item"><strong>Flowcell:</strong> {{ object.flowcell }}</li>
+    <li class="list-group-item">
+      <strong>Flowcell:</strong>
+      <a href="{% url 'core:analyses_by_flowcell' object.flowcell.id %}">{{ object.flowcell.id }}</a>
+    </li>
     <li class="list-group-item"><strong>Is Control:</strong> {{ object.is_control }}</li>
     <li class="list-group-item"><strong>Is Titer:</strong> {{ object.is_titer }}</li>
     <li class="list-group-item"><strong>Pool:</strong> {{ object.pool }}</li>
     <li class="list-group-item"><strong>Failed:</strong> {{ object.failed }}</li>
     <li class="list-group-item"><strong>Sequence Type:</strong> {{ object.sequence_type }}</li>
   </ul>
-
-   <!-- Link back to Lane list or wherever appropriate -->
-   <a href="{% url 'core:lane_detail' object.pk %}">Back to Lane</a>
-
-  
- 
+  <!-- <a href="{% url 'core:library_detail' library.pk %}">Back to Library</a> -->
 </div>
 {% endblock %}
+
+

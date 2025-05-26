@@ -15,8 +15,8 @@
   <ul class="list-group mb-4">
     {% for lane in library_lanes %}
       <li class="list-group-item">
-        <strong>Lane:</strong>
-        <a href="{% url 'core:lane_detail' lane.lane.pk %}">{{ lane.lane }}</a> |
+        <strong>Lane:</strong> 
+        <a href="{% url 'core:lane_detail' pk=lane.lane.pk %}">{{ lane.lane }}</a> |
         <strong>Units:</strong> {{ lane.units }} |
         <strong>Concentration:</strong> {{ lane.concentration }}
       </li>

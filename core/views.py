@@ -23,6 +23,16 @@ from .models import LibraryLane
 
 from django.views.generic import DetailView
 from .models import Lane
+from django.shortcuts import render, get_object_or_404
+from .models import Analyses, Flowcell
+
+def analyses_by_flowcell(request, flowcell_id):
+    flowcell = get_object_or_404(Flowcell, id=flowcell_id)
+    analyses = flowcell.analyses.all()  # using related_name
+    return render(request, 'core/analyses_by_flowcell.html', {
+        'flowcell': flowcell,
+        'analyses': analyses
+    })
 
 class LaneDetailView(DetailView):
     model = Lane
