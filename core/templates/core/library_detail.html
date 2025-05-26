@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Library Details</h2>
+  <ul class="list-group">
+    <li class="list-group-item"><strong>Label:</strong> {{ object.label }}</li>
+    <li class="list-group-item"><strong>Type:</strong> {{ object.library_type }}</li>
+    <li class="list-group-item"><strong>Description:</strong> {{ object.description }}</li>
+    <li class="list-group-item"><strong>Protocol:</strong> {{ object.protocol }}</li>
+    <li class="list-group-item"><strong>Date Created:</strong> {{ object.date_created }}</li>
+  </ul>
+
+  <h3 class="mt-4">Library Lanes</h3>
+  <ul class="list-group mb-4">
+    {% for lane in library_lanes %}
+      <li class="list-group-item">
+        <strong>Lane:</strong>
+        <a href="{% url 'core:lane_detail' lane.lane.pk %}">{{ lane.lane }}</a> |
+        <strong>Units:</strong> {{ lane.units }} |
+        <strong>Concentration:</strong> {{ lane.concentration }}
+      </li>
+    {% empty %}
+      <li class="list-group-item">No lanes associated with this library.</li>
+    {% endfor %}
+  </ul>
+
+  <div class="mt-3">
+    <a href="{% url 'core:library_update' object.pk %}" class="btn btn-warning">Edit Library</a>
+    <a href="{% url 'core:library_delete' object.pk %}" class="btn btn-danger">Delete Library</a>
+    <a href="{% url 'core:sample_detail' object.sample.pk %}" class="btn btn-secondary">Back to Sample</a>
+  </div>
+</div>
+{% endblock %}
+

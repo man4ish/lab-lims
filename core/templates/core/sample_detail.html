@@ -7,11 +7,32 @@
     <li class="list-group-item"><strong>Label:</strong> {{ object.label }}</li>
     <li class="list-group-item"><strong>Project:</strong> {{ object.project }}</li>
     <li class="list-group-item"><strong>Organism:</strong> {{ object.organism }}</li>
-    <!-- Add more fields as needed -->
+    <!-- Add other sample fields as needed -->
   </ul>
+
+  <h3 class="mt-4">Libraries linked to this Sample</h3>
+  <ul class="list-group mb-4">
+    {% for library in libraries %}
+      <li class="list-group-item">
+        <a href="{% url 'core:library_detail' library.pk %}">
+          {{ library.label }}
+        </a> (Type: {{ library.library_type }})
+      </li>
+    {% empty %}
+      <li class="list-group-item">No libraries linked to this sample.</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Add New Library</h3>
+  <form method="post" action="">
+    {% csrf_token %}
+    {{ library_form.as_p }}
+    <button type="submit" class="btn btn-primary">Add Library</button>
+  </form>
+
   <div class="mt-3">
-    <a href="{% url 'core:sample_update' object.pk %}" class="btn btn-warning">Edit</a>
-    <a href="{% url 'core:sample_delete' object.pk %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'core:sample_update' object.pk %}" class="btn btn-warning">Edit Sample</a>
+    <a href="{% url 'core:sample_delete' object.pk %}" class="btn btn-danger">Delete Sample</a>
     <a href="{% url 'core:sample_list' %}" class="btn btn-secondary">Back to list</a>
   </div>
 </div>
