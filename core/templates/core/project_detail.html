@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Project Details: {{ project.label }}</h2>
+    <ul class="list-group mb-4">
+        <li class="list-group-item"><strong>ID:</strong> {{ project.id }}</li>
+        <li class="list-group-item"><strong>Label:</strong> {{ project.label }}</li>
+        <li class="list-group-item"><strong>Gemstone:</strong> {{ project.gemstone }}</li>
+        <li class="list-group-item"><strong>FTP URL:</strong> {{ project.ftp_url|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Is Current:</strong> {{ project.is_current }}</li>
+        <li class="list-group-item"><strong>Active:</strong> {{ project.active }}</li>
+        <li class="list-group-item"><strong>Comments:</strong> {{ project.old_comments|default:"No comments" }}</li>
+        {# Add other fields as needed based on your Project model #}
+    </ul>
+
+    <h3 class="mt-4">Samples in this Project</h3>
+    <ul class="list-group mb-4">
+        {% for sample in project.samples.all %} {# Access related samples via project.samples.all #}
+            <li class="list-group-item">
+                <a href="{% url 'core:sample_detail' sample.pk %}">
+                    {{ sample.label }}
+                </a> (Organism: {{ sample.organism }})
+            </li>
+        {% empty %}
+            <li class="list-group-item">No samples linked to this project.</li>
+        {% endfor %}
+    </ul>
+
+    <div class="mt-3">
+        {# Add links to edit/delete project if you have those views #}
+        <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+{% endblock %}

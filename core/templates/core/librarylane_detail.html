@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Library Details</h1>
+
+<p><strong>Label:</strong> {{ library.label }}</p>
+<p><strong>Type:</strong> {{ library.library_type }}</p>
+<p><strong>Description:</strong> {{ library.description }}</p>
+<p><strong>Protocol:</strong> {{ library.protocol }}</p>
+<p><strong>Date Created:</strong> {{ library.date_created }}</p>
+
+<h2>Library Lanes</h2>
+{% if library.library_lanes.all %}
+  <ul>
+    {% for ll in library.library_lanes.all %}
+      <li>
+        <a href="{% url 'core:librarylane_detail' pk=ll.pk %}">
+          Lane: <a href="{% url 'core:lane_detail' pk=ll.lane.pk %}">{{ ll.lane }}</a> |
+          Units: {{ ll.units }} |
+          Concentration: {{ ll.concentration }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No lanes associated with this library.</p>
+{% endif %}
+
+<a href="{% url 'core:library_detail' library.pk %}">Back to Library</a>
+{% endblock %}

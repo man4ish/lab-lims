@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Details for Flowcell: {{ flowcell.label }} (ID: {{ flowcell.id }})</h2>
+
+  <hr>
+
+  <h3>Analyses</h3>
+  {% if analyses %}
+    <ul class="list-group">
+      {% for analysis in analyses %}
+        <li class="list-group-item">
+          <strong>Analysis ID:</strong> {{ analysis.id }} <br>
+          <strong>Analysis Type:</strong> {{ analysis.analysis_type.name|default:"N/A" }} <br>
+          <strong>Date Performed:</strong> {{ analysis.date_performed|default:"N/A" }} <br>
+          <strong>Software Version:</strong> {{ analysis.software_version|default:"N/A" }} <br>
+          <strong>Contaminant Filtered:</strong> {{ analysis.contaminant_filtered|yesno:"Yes,No,N/A" }} <br>
+          <strong>Notes:</strong> {{ analysis.notes|default:"None" }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No analyses found for this flowcell.</p>
+  {% endif %}
+
+  <hr class="my-4">
+
+  <h3>Runs</h3>
+  {% if runs %}
+    <ul class="list-group">
+      {% for run in runs %}
+        <li class="list-group-item">
+          <strong>Run ID:</strong> {{ run.id }} <br>
+          <strong>Label:</strong> {{ run.label }} <br>
+          <strong>Date Started:</strong> {{ run.date_started|default:"N/A" }} <br>
+          <strong>Date Completed:</strong> {{ run.date_completed|default:"N/A" }} <br>
+          <strong>Cycles:</strong> {{ run.cycles|default:"N/A" }} <br>
+          {# Link to Instrument using a button to trigger the modal #}
+          <strong>Instrument:</strong>
+          {% if run.instrument %}
+            <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#instrumentModal" data-instrument-url="{% url 'core:instrument_detail_modal' run.instrument.pk %}">
+              {{ run.instrument.label }} {# Use .label, not .name #}
+            </button>
+          {% else %}
+            N/A
+          {% endif %}
+          <br>
+          <strong>Employee ID:</strong> {{ run.employee_id|default:"N/A" }} <br>
+          <strong>Notes:</strong> {{ run.notes|default:"None" }}
+          {# You can add cycle1_attachment_id and read2_cycle1_attachment_id here if needed #}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No runs found for this flowcell.</p>
+  {% endif %}
+
+  {# Add the Bootstrap Modal structure here, same as in run_detail.html #}
+  <div class="modal fade" id="instrumentModal" tabindex="-1" aria-labelledby="instrumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="instrumentModalLabel">Instrument Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {# Content will be loaded here by JavaScript #}
+          Loading...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var instrumentModal = document.getElementById('instrumentModal');
+    if (instrumentModal) {
+        instrumentModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var instrumentUrl = button.getAttribute('data-instrument-url'); // Extract info from data-* attributes
+
+            var modalBody = instrumentModal.querySelector('.modal-body');
+            modalBody.innerHTML = 'Loading...'; // Show loading message
+
+            // Fetch the content via AJAX
+            fetch(instrumentUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    modalBody.innerHTML = html; // Inject HTML into modal body
+                })
+                .catch(error => {
+                    console.error('Error loading instrument details:', error);
+                    modalBody.innerHTML = '<p class="text-danger">Failed to load details. Please try again.</p>';
+                });
+        });
+        // Optional: Clear modal content when hidden to ensure fresh load next time
+        instrumentModal.addEventListener('hidden.bs.modal', function () {
+            this.querySelector('.modal-body').innerHTML = 'Loading...';
+        });
+    }
+});
+</script>
+{% endblock extra_js %}
+
+{% endblock %}

@@ -1,0 +1,20 @@
+{# core/lane_list.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>All Lanes</h2>
+    {% if lanes %}
+        <ul class="list-group">
+            {% for lane in lanes %}
+                <li class="list-group-item">
+                    <a href="{% url 'core:lane_detail' lane.pk %}">Lane Number: {{ lane.number }} (ID: {{ lane.pk }})</a>
+                    {# Add more lane details here if you like #}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No lanes found.</p>
+    {% endif %}
+</div>
+{% endblock %}

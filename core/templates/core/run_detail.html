@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Run Details: {{ object.label }}</h2>
+    <ul class="list-group mb-4">
+        <li class="list-group-item"><strong>ID:</strong> {{ object.id }}</li>
+        <li class="list-group-item"><strong>Label:</strong> {{ object.label }}</li>
+        <li class="list-group-item"><strong>Date Started:</strong> {{ object.date_started|date:"M d, Y"|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Date Completed:</strong> {{ object.date_completed|date:"M d, Y"|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Cycles:</strong> {{ object.cycles|default:"N/A" }}</li>
+        <li class="list-group-item">
+            <strong>Instrument:</strong>
+            {% if object.instrument %}
+                {# This links to the full Instrument Detail page, not a modal, for consistency with direct navigation #}
+                <a href="{% url 'core:instrument_detail' object.instrument.pk %}">
+                    {{ object.instrument.label }}
+                </a>
+            {% else %}
+                N/A
+            {% endif %}
+        </li>
+        <li class="list-group-item"><strong>Flowcell:</strong>
+            {% if object.flowcell %}
+                {# This links to the Flowcell Detail page #}
+                <a href="{% url 'core:analyses_and_runs_by_flowcell' object.flowcell.pk %}">
+                    {{ object.flowcell.label }}
+                </a>
+            {% else %}
+                N/A
+            {% endif %}
+        </li>
+        <li class="list-group-item"><strong>Employee ID:</strong> {{ object.employee_id|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Notes:</strong> {{ object.notes|default:"None" }}</li>
+        {# Add other relevant fields from your Run model as needed #}
+        <li class="list-group-item"><strong>Cycle 1 Attachment ID:</strong> {{ object.cycle1_attachment_id|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Read 2 Cycle 1 Attachment ID:</strong> {{ object.read2_cycle1_attachment_id|default:"N/A" }}</li>
+    </ul>
+
+    <div class="mt-3">
+        {# Add links to edit/delete Run if you have those views #}
+        {# Example: <a href="{% url 'core:run_update' object.pk %}" class="btn btn-warning">Edit Run</a> #}
+        {# Example: <a href="{% url 'core:run_delete' object.pk %}" class="btn btn-danger">Delete Run</a> #}
+        <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+{% endblock %}

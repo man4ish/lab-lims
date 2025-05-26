@@ -1,0 +1,28 @@
+<ul class="list-group mb-4">
+    <li class="list-group-item"><strong>ID:</strong> {{ instrument.id }}</li>
+    <li class="list-group-item"><strong>Label:</strong> {{ instrument.label }}</li>
+    <li class="list-group-item">
+        <strong>Type:</strong>
+        {# Displays the InstrumentType label. No link here, as it's a nested detail within a modal. #}
+        {% if instrument.instrument_type %}
+            {{ instrument.instrument_type.label }}
+        {% else %}
+            N/A
+        {% endif %}
+    </li>
+    {# Add other instrument-specific details if your model has them, e.g., description, manufacturer #}
+</ul>
+
+<h4 class="mt-4">Runs on this Instrument</h4>
+<ul class="list-group mb-4">
+    {% for run in instrument.runs.all %}
+        <li class="list-group-item">
+            {# This link will navigate to the full Run detail page, closing the modal. #}
+            <a href="{% url 'core:run_detail' run.pk %}">
+                {{ run.label }}
+            </a> (Date: {{ run.date_started|date:"M d, Y" }})
+        </li>
+    {% empty %}
+        <li class="list-group-item">No runs linked to this instrument.</li>
+    {% endfor %}
+</ul>
