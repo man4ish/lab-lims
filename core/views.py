@@ -35,6 +35,97 @@ from .models import Instrument # Make sure Instrument model is imported
 
 from .models import Run # Make sure Run model is imported
 
+from django.views.generic import ListView
+from django.db.models import Q
+from .models import Sample
+
+from django.http import HttpResponse
+import csv
+import pandas as pd
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils.decorators import method_decorator
+
+# Helper functions to check group membership
+def is_admin(user):
+    return user.is_authenticated and user.groups.filter(name='admin').exists()
+
+def is_user(user):
+    return user.is_authenticated and user.groups.filter(name='user').exists()
+
+# Decorator versions for function views
+admin_required = user_passes_test(is_admin)
+user_or_admin_required = user_passes_test(lambda u: is_admin(u) or is_user(u))
+
+class SampleListView(ListView):
+    model = Sample
+    template_name = 'core/sample_list.html'
+    context_object_name = 'object_list'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+
+        if query:
+            queryset = queryset.filter(
+                Q(label__icontains=query) |
+                Q(description__icontains=query) |
+                Q(project__label__icontains=query) |
+                Q(organism__label__icontains=query)
+            )
+        return queryset
+    
+def sample_export(request):
+    query = request.GET.get('q')
+    format_ = request.GET.get('format', 'csv').lower()
+
+    queryset = Sample.objects.all()
+    if query:
+        queryset = queryset.filter(
+            Q(label__icontains=query) |
+            Q(description__icontains=query) |
+            Q(project__label__icontains=query) |
+            Q(organism__label__icontains=query)
+        )
+
+    data = queryset.values('label', 'project__label', 'organism__label')
+
+    if format_ == 'excel':
+        import pandas as pd
+
+        df = pd.DataFrame(list(data))
+        df.rename(columns={
+            'label': 'Label',
+            'project__label': 'Project',
+            'organism__label': 'Organism'
+        }, inplace=True)
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="samples.xlsx"'
+
+        with pd.ExcelWriter(response, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Samples')
+
+        return response
+
+    else:  # CSV
+        import csv
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="samples.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Label', 'Project', 'Organism'])
+        for sample in data:
+            writer.writerow([
+                sample['label'],
+                sample['project__label'],
+                sample['organism__label'],
+            ])
+
+        return response
+
 class InstrumentDetailView(DetailView):
     model = Instrument
     template_name = 'core/instrument_detail.html' # This is the template it will use
@@ -96,6 +187,7 @@ class LaneDetailView(DetailView):
     model = Lane
     template_name = 'core/lane_detail.html'  # You can change this path if you want
 
+
 def logout_confirm(request):
     if request.method == "POST":
         logout(request)
@@ -106,9 +198,6 @@ def logout_confirm(request):
 def home_view(request):
     return render(request, 'core/home.html')
 
-class SampleListView(ListView):
-    model = Sample
-    template_name = 'core/sample_list.html'
 
 class SampleDetailView(DetailView):
     model = Sample

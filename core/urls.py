@@ -15,6 +15,7 @@ urlpatterns = [
     path('samples/<int:pk>/', core_views.SampleDetailView.as_view(), name='sample_detail'),
     path('samples/<int:pk>/edit/', core_views.SampleUpdateView.as_view(), name='sample_update'),
     path('samples/<int:pk>/delete/', core_views.SampleDeleteView.as_view(), name='sample_delete'),
+    path('samples/export/', views.sample_export, name='sample_export'),
 
     path('library/<int:pk>/', LibraryDetailView.as_view(), name='library_detail'),
     path('library/<int:pk>/update/', LibraryUpdateView.as_view(), name='library_update'),
