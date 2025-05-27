@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -77,14 +78,19 @@ WSGI_APPLICATION = "lab_data_manager.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'limsdb',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.mysql', # Keep this as mysql
+        'NAME': os.environ.get('MYSQL_DATABASE', 'limsdb'), # Default 'limsdb' if not set in .env
+        'USER': os.environ.get('MYSQL_USER', 'root'), # Default 'root' if not set in .env
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'root'), # Default 'root' if not set in .env
+        'HOST': os.environ.get('MYSQL_HOST', 'localhost'), # 'db' when using Docker Compose, 'localhost' for local
+        'PORT': os.environ.get('MYSQL_PORT', '3306'), # Default '3306' if not set in .env
     }
 }
+
+# Add this if you haven't already, for general app settings
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-very-insecure-default-key-for-development-only')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True' # Convert string "True" to boolean True
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', os.environ.get('DJANGO_ALLOWED_HOST', '0.0.0.0')] # Add your hostnames here. 0.0.0.0 for Docker.
 
 
 # Password validation
