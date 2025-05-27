@@ -1,0 +1,41 @@
+services:
+  web:
+    build: .
+    command: gunicorn --bind 0.0.0.0:8000 lab_data_manager.wsgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env # <-- The 'web' service still gets all env vars from .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  db:
+    image: mysql:8
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # >>> REMOVE THIS LINE: env_file: - .env <<<
+    environment: # ONLY these variables for MySQL's initial setup
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD} # Sets root password from .env's MYSQL_PASSWORD
+      MYSQL_DATABASE: ${MYSQL_DATABASE}     # Creates initial database from .env's MYSQL_DATABASE
+      # We no longer need to explicitly pass MYSQL_USER/MYSQL_PASSWORD here, nor let env_file do it,
+      # because MYSQL_ROOT_PASSWORD and MYSQL_DATABASE are sufficient for db init.
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
