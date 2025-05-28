@@ -1,0 +1,11 @@
+app:
+  config_file: config.yaml              # Path to this configuration file
+  environment: dev                      # e.g., dev, staging, production
+
+database:
+  engine: django.db.backends.mysql      # Keep this as mysql
+  name: limsdb                          # Default if MYSQL_DATABASE is not set
+  user: root                            # Default if MYSQL_USER is not set
+  password: root                        # Default if MYSQL_PASSWORD is not set
+  host: localhost                       # 'db' for Docker Compose, 'localhost' for local
+  port: "3306"                          # Must be a string to match Django's expected type
