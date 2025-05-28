@@ -13,8 +13,8 @@ A lightweight Laboratory Information Management System (LIMS) built with Django 
 - Email notifications on submission
 - Authentication (planned)
 - Role-based permissions (planned)
-- CSV/Excel export (planned)
-- Search and filter (planned)
+- CSV/Excel export
+- Search and filter
 
 ## Tech Stack
 
