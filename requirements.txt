@@ -18,4 +18,6 @@ pytest-django
 black
 isort
 gunicorn
+pandas
+django-extensions
 mysqlclient # Or 'Pillow' if your project uses image processing (common)
