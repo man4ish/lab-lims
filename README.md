@@ -4,7 +4,7 @@ A lightweight Laboratory Information Management System (LIMS) built with Django 
 
 ## Overview
 
-**Lab Data Manager** is designed to help research teams track, organize, and search biological samples in a structured, user-friendly interface. It supports core LIMS features such as sample submission, metadata tracking, and secure access.
+**lab-lims** is designed to help research teams track, organize, and search biological samples in a structured, user-friendly interface. It supports core LIMS features such as sample submission, metadata tracking, and secure access.
 
 ## Features
 
