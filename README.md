@@ -1,4 +1,4 @@
-# Lab Data Manager (Under development)
+# lab-lims (Under development)
 
 A lightweight Laboratory Information Management System (LIMS) built with Django to manage biological sample data, projects, and associated metadata.
 
